@@ -65,7 +65,7 @@ def sendEmail(to, content):
     server.ehlo()
     server.starttls()
     server.login('Example@gmail.com', 'Password')
-    server.sendmail('jkartik156@gmail.com', to, content)
+    server.sendmail('yourmail@gmail.com', to, content)
     server.close()
 
 
@@ -126,10 +126,11 @@ if __name__ == "__main__":
             os.startfile(codePath)
 
         elif 'send email' in query:
+#             Do not forget to enable "less Secure Apps for gmail"
             try:
                 speak('what shall i say?')
                 content = takeCommand()
-                to = "jkartik156@gmail.com"
+                to = "yourmail@gmail.com"  
                 sendEmail(to, content)
                 speak("Email sent sucessfully")
             except Exception as e:
