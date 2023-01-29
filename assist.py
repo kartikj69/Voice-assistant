@@ -1,15 +1,13 @@
-import pyttsx3  # pip install pyttsx3
-import pyaudio  # pip install pyaudio
-import datetime  # pip install datetime
-import wikipedia  # pip install wikipedia
-import webbrowser
-import time
 import os  # pip install os
 from plyer import notification  # pip install plyer
 import smtplib  # pip install smtplib
 import speech_recognition as sr  # pip install speechRecognition
-
-
+import pyttsx3  # pip install pyttsx3
+import pyaudio  # pip install pyaudio
+import datetime  # pip install datetime
+import wikipedia  # pip install wikipedia
+import webbrowser # pip install webbrowser
+import time
 '''
 initiating speech of the assistant
 '''
