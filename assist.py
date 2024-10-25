@@ -1,150 +1,146 @@
-import os  # pip install os
-from plyer import notification  # pip install plyer
-import smtplib  # pip install smtplib
-import speech_recognition as sr  # pip install speechRecognition
-import pyttsx3  # pip install pyttsx3
-import pyaudio  # pip install pyaudio
-import datetime  # pip install datetime
-import wikipedia  # pip install wikipedia
-import webbrowser # pip install webbrowser
+import os
+from plyer import notification
+import smtplib
+import speech_recognition as sr
+import pyttsx3
+import pyaudio
+import datetime
+import wikipedia
+import webbrowser
 import time
-'''
-initiating speech of the assistant
-'''
+import logging
+from config import EMAIL, PASSWORD, MUSIC_DIR, CODE_PATH
 
+# Initialize logging
+logging.basicConfig(level=logging.INFO)
+
+# Initialize speech engine
 engine = pyttsx3.init('sapi5')
 voices = engine.getProperty('voices')
-# print(voices[1].id)
 engine.setProperty('voice', voices[1].id)
 
-
 def speak(audio):
+    """Function to make the assistant speak"""
     engine.say(audio)
     engine.runAndWait()
 
-
-'''
-Functions defined for the assistant 
-'''
-
-
-def wishme():
+def wish_me():
+    """Function to wish the user based on the time of the day"""
     hour = int(datetime.datetime.now().hour)
-    if hour >= 0 and hour < 12:
+    if 0 <= hour < 12:
         speak("Good Morning")
-    elif hour >= 12 and hour < 18:
+    elif 12 <= hour < 18:
         speak("Good Afternoon!")
     else:
         speak("Good Evening")
+    speak("I am your assistant, your excellency. Please tell me how may I help you?")
 
-    speak("I am your assistant your exilency, Please tell me how may i help you?")
-
-
-def takeCommand():
+def take_command():
+    """Function to take voice command from the user"""
     r = sr.Recognizer()
     with sr.Microphone() as source:
-        print("Listning...")
+        logging.info("Listening...")
         r.pause_threshold = 1
         audio = r.listen(source)
-
     try:
-        print("Recognizing...")
+        logging.info("Recognizing...")
         query = r.recognize_google(audio, language='en-in')
-        print(f"User said: {query}\n")
-
+        logging.info(f"User said: {query}\n")
     except Exception as e:
-        # print(e)
-
-        print("say that again please")
+        logging.error(e)
+        logging.info("Say that again please")
         return "None"
-    return query
+    return query.lower()
 
+def send_email(to, content):
+    """Function to send an email"""
+    try:
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.ehlo()
+        server.starttls()
+        server.login(EMAIL, PASSWORD)
+        server.sendmail(EMAIL, to, content)
+        server.close()
+        speak("Email sent successfully")
+    except Exception as e:
+        logging.error(e)
+        speak("Sorry, I failed to send the email")
 
-def sendEmail(to, content):
-    server = smtplib.SMTP('smtp.gmail.com', 587)
-    server.ehlo()
-    server.starttls()
-    server.login('Example@gmail.com', 'Password')
-    server.sendmail('yourmail@gmail.com', to, content)
-    server.close()
-
-
-def remind(Message, Interval):
+def remind(message, interval):
+    """Function to set a reminder"""
     while True:
         notification.notify(
-            title=f"{Message}",
-            message=f"",
+            title=message,
+            message="",
             timeout=20
         )
-        time.sleep(Interval*60)
+        time.sleep(interval * 60)
 
+def search_wikipedia(query):
+    """Function to search Wikipedia"""
+    speak('Searching Wikipedia...')
+    query = query.replace("wikipedia", "")
+    results = wikipedia.summary(query, sentences=2)
+    speak("According to Wikipedia")
+    speak(results)
+    logging.info(results)
 
-'''
-Execution of speech recognition and the following commands
-'''
+def open_website(url, site_name):
+    """Function to open a website"""
+    webbrowser.open(url)
+    speak(f"Opening {site_name}")
+
+def play_music():
+    """Function to play music"""
+    songs = os.listdir(MUSIC_DIR)
+    os.startfile(os.path.join(MUSIC_DIR, songs[1]))
+
+def tell_time():
+    """Function to tell the current time"""
+    str_time = datetime.datetime.now().strftime("%H:%M:%S")
+    speak(f"Sir, the time is: {str_time}")
+
+def open_code():
+    """Function to open VS Code"""
+    os.startfile(CODE_PATH)
 
 if __name__ == "__main__":
     speak("Hello There!!")
-    wishme()
+    wish_me()
     while True:
-        # if 1:
-        query = takeCommand().lower()
+        query = take_command()
 
         if 'wikipedia' in query:
-            speak('Searching Wikipedia...')
-            query = query.replace("wikipedia", "")
-            results = wikipedia.summary(query, sentences=2)
-            speak("according to wikipedia")
-            speak(results)
-            print(results)
-
+            search_wikipedia(query)
         elif 'open youtube' in query:
-            webbrowser.open("https://www.youtube.com/")
-            speak("Opening!")
-
+            open_website("https://www.youtube.com/", "YouTube")
         elif 'open google' in query:
-            webbrowser.open("https://www.google.com/")
-            speak("Opening!")
-
+            open_website("https://www.google.com/", "Google")
         elif 'open stackoverflow' in query:
-            webbrowser.open("https://www.stackoverflow.com/")
-            speak("Opening!")
-
+            open_website("https://www.stackoverflow.com/", "Stack Overflow")
         elif 'play music' in query:
-            music_dir = "C:\\Users\\jkart\\OneDrive\\Desktop\\gud"
-            songs = os.listdir(music_dir)
-            print(songs)
-            os.startfile(os.path.join(music_dir, songs[1]))
-            # Logic for executing commands
-
+            play_music()
         elif 'the time' in query:
-            strTime = datetime.datetime.now().strftime("%H:%M:%S")
-            speak(f"Sir the time is: {strTime}")
-
+            tell_time()
         elif 'open code' in query:
-            codePath = 'C:\\Users\\jkart\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe'
-            os.startfile(codePath)
-
+            open_code()
         elif 'send email' in query:
-#             Do not forget to enable "less Secure Apps for gmail"
             try:
-                speak('what shall i say?')
-                content = takeCommand()
-                to = "yourmail@gmail.com"  
-                sendEmail(to, content)
-                speak("Email sent sucessfully")
+                speak('What shall I say?')
+                content = take_command()
+                to = "yourmail@gmail.com"
+                send_email(to, content)
             except Exception as e:
-                print(e)
-                speak("Sorry , I failed , I shall go die now ;-;")
-
+                logging.error(e)
+                speak("Sorry, I failed to send the email")
         elif 'reminder' in query:
             try:
-                speak('what shall i remind you about?')
-                Message = takeCommand()
+                speak('What shall I remind you about?')
+                message = take_command()
                 speak('Please mention interval in minutes')
-                Interval = takeCommand()
-                speak("Remainder set sucessfully")
-                remind(Message, Interval)
+                interval = int(take_command())
+                speak("Reminder set successfully")
+                remind(message, interval)
             except Exception as e:
-                print(e)
-                speak("Sorry , I failed , I shall go die now ;-;")
+                logging.error(e)
+                speak("Sorry, I failed to set the reminder")
